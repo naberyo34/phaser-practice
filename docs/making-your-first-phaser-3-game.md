@@ -43,21 +43,19 @@ Phaser 3において、すべてのゲームオブジェクトはデフォルト
 デフォルトの設定だとコンストラクターで初期化をしないとtsに怒られる（Phaserでは `create()` 内などで代入をする必要があるため、初期値をここで入れることができない）ため、`"strictPropertyInitialization": false` を指定しておくとよい。
 
 ```ts
-private platforms: Phaser.Physics.Arcade.StaticGroup
 private player: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 private cursors: Phaser.Types.Input.Keyboard.CursorKeys
-private spaceBar: Phaser.Input.Keyboard.Key
 ```
 
 シーンの `create()` 内に追加していく。
 
 ```ts
-this.platforms = this.physics.add.staticGroup()
+const platforms = this.physics.add.staticGroup()
 
-this.platforms.create(400, 568, 'ground').setScale(2).refreshBody()
-this.platforms.create(600, 400, 'ground')
-this.platforms.create(50, 250, 'ground')
-this.platforms.create(750, 220, 'ground')
+platforms.create(400, 568, 'ground').setScale(2).refreshBody()
+platforms.create(600, 400, 'ground')
+platforms.create(50, 250, 'ground')
+platforms.create(750, 220, 'ground')
 ```
 
 `physics` を用いてオブジェクトを追加すると、オブジェクトがPhaser標準の物理エンジン `Arcade Physics` による演算の対象となる。
@@ -130,8 +128,7 @@ this.physics.add.collider(player, platforms)
 ボタンの初期化もしておく。
 
 ```ts
-this.cursors = this.input.keyboard!.createCursorKeys()
-this.spaceBar = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+this.cursors = this.input.keyboard!.createCursorKeys() // createCursorKeys で space と shift の初期化もできる
 ```
 
 ボタンの初期化ができたら、自動的にポーリング処理を実行してくれる `update()` 内にキーボード操作のコードを書いていく。
@@ -150,7 +147,7 @@ if (this.cursors.left.isDown) {
 }
 
 // ジャンプ
-if (this.spaceBar.isDown && this.player.body.touching.down) {
+if (this.cursors.space.isDown && this.player.body.touching.down) {
 	this.player.setVelocityY(-330)
 }
 ```
@@ -158,3 +155,111 @@ if (this.spaceBar.isDown && this.player.body.touching.down) {
 「左移動」「右移動」「静止」の状態は同時に発生しないため `else-if` 文を用いているのがポイント。
 ジャンプは `this.player.body.touching.down` で「プレイヤーの下部が接触している（=接地している）」ことを判定しており、ジャンプボタンを長押ししたり空中で連打しても飛距離が増えないようになっている。この条件を渡さなければ無限にホバー移動する。工夫次第で、二段ジャンプやゲージ消費での飛行なども実装できるだろう。
 
+## アイテムを追加する
+
+TypeScriptで書く場合、多少公式サンプルと異なる書き方をしないと怒られる。
+
+```ts
+const stars = this.physics.add.group({
+	key: 'star',
+	repeat: 11,
+	setXY: { x: 12, y: 0, stepX: 70 },
+})
+stars.children.iterate((child) => {
+	;(child as Phaser.Physics.Arcade.Sprite).setBounceY(
+		Phaser.Math.FloatBetween(0.4, 0.8),
+	)
+	return true
+})
+```
+
+動的ボディを持ったグループを `group` で生成、`repeat` で合計12個生成する。
+`iterate` を用いると `forEach` 的にグループの子要素を触ることができる（型がちょっと弱いのでキャストする必要がある）。
+
+```ts
+this.physics.add.overlap(this.player, stars, (_player, star) => {
+			;(star as Phaser.Physics.Arcade.Sprite).disableBody(true, true)
+		})
+```
+
+`overlap()` でキャラクターとアイテムの接触判定を行い、アイテムを非表示にするようにした例。
+
+## スコアを追加する
+
+アイテムを取得したらスコアが加算されるようにしたい。
+やること自体はシンプルで、
+
+```ts
+private score = 0
+```
+
+```ts
+const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px' })
+
+this.physics.add.overlap(this.player, stars, (_player, star) => {
+	;(star as Phaser.Physics.Arcade.Sprite).disableBody(true, true)
+	this.score += 10
+	scoreText.setText(`Score: ${this.score}`)
+})
+```
+
+スコアを変数として保持しておき、画面上に表示しておく。あとは接触判定時に加算すれば簡単に実現できる。
+
+## 敵を追加する
+
+敵といいつつ、ここでは「爆弾」。
+アイテムをすべて取得すると1つずつ出現し、当たるとゲームオーバー判定になるオブジェクトを追加していく。
+
+```ts
+private gameOver = false
+```
+
+```ts
+// 爆弾グループ
+const bombs = this.physics.add.group()
+this.physics.add.collider(bombs, platforms)
+this.physics.add.collider(this.player, bombs, (player) => {
+	this.physics.pause()
+	;(player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).setTint(
+		0xff0000,
+	)
+	;(player as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody).play(
+		'turn',
+	)
+})
+```
+
+```ts
+this.physics.add.overlap(this.player, stars, (_player, star) => {
+	;(star as Phaser.Physics.Arcade.Sprite).disableBody(true, true)
+	this.score += 10
+	scoreText.setText(`Score: ${this.score}`)
+
+	// アイテムをすべて回収した
+	if (stars.countActive(true) === 0) {
+		// アイテム復活
+		stars.children.iterate((child) => {
+			;(child as Phaser.Physics.Arcade.Sprite).enableBody(
+				true,
+				(child as Phaser.Physics.Arcade.Sprite).x,
+				0,
+				true,
+				true,
+			)
+			return true
+		})
+
+		// 爆弾追加
+		const x =
+			this.player.x < 400
+				? Phaser.Math.Between(400, 800)
+				: Phaser.Math.Between(0, 400)
+		const bomb = bombs.create(x, 16, 'bomb')
+		bomb.setBounce(1)
+		bomb.setCollideWorldBounds(true)
+		bomb.setVelocity(Phaser.Math.Between(-200, 200), 20)
+	}
+})
+```
+
+新しい内容は少なく、わりと愚直に実装していくだけ。
