@@ -15,52 +15,32 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		this.setCollideWorldBounds(true)
 
 		this.anims.create({
-			key: 'leftStand',
-			frames: [{ key: 'dude', frame: 5 }],
-			frameRate: 20,
-		})
-		this.anims.create({
-			key: 'centerStand',
-			frames: [{ key: 'dude', frame: 6 }],
-			frameRate: 20,
-		})
-		this.anims.create({
-			key: 'rightStand',
-			frames: [{ key: 'dude', frame: 7 }],
-			frameRate: 20,
-		})
-		this.anims.create({
-			key: 'leftJump',
+			key: 'jump',
 			frames: [{ key: 'dude', frame: 0 }],
 			frameRate: 20,
 		})
 		this.anims.create({
-			key: 'rightJump',
-			frames: [{ key: 'dude', frame: 12 }],
-			frameRate: 20,
-		})
-		this.anims.create({
-			key: 'left',
+			key: 'walk',
 			frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 4 }),
 			frameRate: 10,
 			repeat: -1,
 		})
 		this.anims.create({
-			key: 'right',
-			frames: this.anims.generateFrameNumbers('dude', { start: 8, end: 11 }),
-			frameRate: 10,
-			repeat: -1,
+			key: 'stand',
+			frames: [{ key: 'dude', frame: 5 }],
+			frameRate: 20,
 		})
 	}
 
 	private cursors: Phaser.Types.Input.Keyboard.CursorKeys
 	private isDead = false
-	private currentDirection: 'right' | 'left' = 'right'
+	private isFlip = true
 
 	dead() {
 		this.isDead = true
+		this.setRotation(90)
 		this.setTint(0xff0000)
-		this.play('centerStand')
+		this.play('centerStand').flipY
 	}
 
 	update() {
@@ -68,34 +48,20 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 			return
 		}
 
+		this.flipX = this.isFlip
+
 		// 左右移動
 		if (this.cursors.left.isDown) {
-			if (this.currentDirection === 'right') {
-				this.currentDirection = 'left'
-			}
+			this.isFlip = false
 			this.setVelocityX(-320)
-			this.body!.touching.down
-				? this.play('left', true)
-				: this.play('leftJump', true)
+			this.play(this.body!.touching.down ? 'walk' : 'jump', true)
 		} else if (this.cursors.right.isDown) {
-			if (this.currentDirection === 'left') {
-				this.currentDirection = 'right'
-			}
+			this.isFlip = true
 			this.setVelocityX(320)
-			this.body!.touching.down
-				? this.play('right', true)
-				: this.play('rightJump', true)
+			this.play(this.body!.touching.down ? 'walk' : 'jump', true)
 		} else {
 			this.setVelocityX(0)
-			if (this.currentDirection === 'left') {
-				this.body!.touching.down
-					? this.play('leftStand', true)
-					: this.play('leftJump', true)
-			} else {
-				this.body!.touching.down
-					? this.play('rightStand', true)
-					: this.play('rightJump', true)
-			}
+			this.play(this.body!.touching.down ? 'stand' : 'jump', true)
 		}
 
 		// ジャンプ
