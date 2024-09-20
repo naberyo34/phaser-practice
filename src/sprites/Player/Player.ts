@@ -15,19 +15,39 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		this.setCollideWorldBounds(true)
 
 		this.anims.create({
+			key: 'leftStand',
+			frames: [{ key: 'dude', frame: 5 }],
+			frameRate: 20,
+		})
+		this.anims.create({
+			key: 'centerStand',
+			frames: [{ key: 'dude', frame: 6 }],
+			frameRate: 20,
+		})
+		this.anims.create({
+			key: 'rightStand',
+			frames: [{ key: 'dude', frame: 7 }],
+			frameRate: 20,
+		})
+		this.anims.create({
+			key: 'leftJump',
+			frames: [{ key: 'dude', frame: 0 }],
+			frameRate: 20,
+		})
+		this.anims.create({
+			key: 'rightJump',
+			frames: [{ key: 'dude', frame: 12 }],
+			frameRate: 20,
+		})
+		this.anims.create({
 			key: 'left',
-			frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+			frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 4 }),
 			frameRate: 10,
 			repeat: -1,
 		})
 		this.anims.create({
-			key: 'turn',
-			frames: [{ key: 'dude', frame: 4 }],
-			frameRate: 20,
-		})
-		this.anims.create({
 			key: 'right',
-			frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+			frames: this.anims.generateFrameNumbers('dude', { start: 8, end: 11 }),
 			frameRate: 10,
 			repeat: -1,
 		})
@@ -35,28 +55,47 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
 	private cursors: Phaser.Types.Input.Keyboard.CursorKeys
 	private isDead = false
+	private currentDirection: 'right' | 'left' = 'right'
 
 	dead() {
 		this.isDead = true
 		this.setTint(0xff0000)
-		this.play('turn')
+		this.play('centerStand')
 	}
 
 	update() {
-    if (this.isDead) {
-      return
-    }
+		if (this.isDead) {
+			return
+		}
 
 		// 左右移動
 		if (this.cursors.left.isDown) {
+			if (this.currentDirection === 'right') {
+				this.currentDirection = 'left'
+			}
 			this.setVelocityX(-320)
-			this.anims.play('left', true)
+			this.body!.touching.down
+				? this.play('left', true)
+				: this.play('leftJump', true)
 		} else if (this.cursors.right.isDown) {
+			if (this.currentDirection === 'left') {
+				this.currentDirection = 'right'
+			}
 			this.setVelocityX(320)
-			this.anims.play('right', true)
+			this.body!.touching.down
+				? this.play('right', true)
+				: this.play('rightJump', true)
 		} else {
 			this.setVelocityX(0)
-			this.anims.play('turn')
+			if (this.currentDirection === 'left') {
+				this.body!.touching.down
+					? this.play('leftStand', true)
+					: this.play('leftJump', true)
+			} else {
+				this.body!.touching.down
+					? this.play('rightStand', true)
+					: this.play('rightJump', true)
+			}
 		}
 
 		// ジャンプ
