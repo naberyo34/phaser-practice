@@ -6,11 +6,13 @@ export class Main extends Phaser.Scene {
 	}
 
 	preload() {
-		this.load.image('sky', 'assets/sky.png')
-		this.load.image('ground', 'assets/platform.png')
-		this.load.image('star', 'assets/star.png')
-		this.load.image('bomb', 'assets/bomb.png')
-		this.load.spritesheet('dude', 'assets/dude_x2.png', {
+		this.load.image('background', 'assets/stage/background.png')
+		this.load.image('floor', 'assets/stage/floor.png')
+		this.load.image('sofa', 'assets/stage/sofa.png')
+		this.load.image('bookshelf', 'assets/stage/bookshelf.png')
+		this.load.image('bottle', 'assets/bottle.png')
+		this.load.image('can', 'assets/can.png')
+		this.load.spritesheet('tama', 'assets/tama.png', {
 			frameWidth: 64,
 			frameHeight: 76,
 		})
@@ -23,18 +25,21 @@ export class Main extends Phaser.Scene {
 	create() {
 		this.score = 0
 		this.cursors = this.input.keyboard!.createCursorKeys()
-		this.add.image(400, 300, 'sky')
-		this.player = new Player(this, 100, 450, 'dude', this.cursors)
+		this.add.image(400, 300, 'background')
 		const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px' })
 
-		const platforms = this.physics.add.staticGroup()
-		platforms.create(400, 568, 'ground').setScale(2).refreshBody()
-		platforms.create(600, 400, 'ground')
-		platforms.create(50, 250, 'ground')
-		platforms.create(750, 220, 'ground')
+		// 当たり判定を調整しなくてよいステージオブジェクトはここに入れる
+		const stage = this.physics.add.staticGroup()
+		stage.create(400, 537, 'floor')
+		stage.create(670, 353, 'bookshelf')
+
+		const sofa = this.physics.add.staticSprite(300, 429, 'sofa')
+		sofa.setSize(162, 48).setOffset(20, 48)
+
+		this.player = new Player(this, 100, 200, 'tama', this.cursors)
 
 		const stars = this.physics.add.group()
-		const star = stars.create(Phaser.Math.Between(0, 800), 16, 'star')
+		const star = stars.create(Phaser.Math.Between(0, 800), 16, 'bottle')
 		star.setBounce(1)
 		star.setCollideWorldBounds(true)
 		star.setVelocity(Phaser.Math.Between(-400, 400), 20)
@@ -64,7 +69,7 @@ export class Main extends Phaser.Scene {
 				})
 
 				// 爆弾追加
-				const bomb = bombs.create(Phaser.Math.Between(0, 800), 16, 'bomb')
+				const bomb = bombs.create(Phaser.Math.Between(0, 800), 16, 'can')
 				bomb.setBounce(1)
 				bomb.setCollideWorldBounds(true)
 				bomb.setVelocity(Phaser.Math.Between(-400, 400), 20)
@@ -89,9 +94,10 @@ export class Main extends Phaser.Scene {
 		}
 
 		// 接触判定
-		this.physics.add.collider(this.player, platforms)
-		this.physics.add.collider(stars, platforms)
-		this.physics.add.collider(bombs, platforms)
+		this.physics.add.collider(this.player, stage)
+		this.physics.add.collider(this.player, sofa)
+		this.physics.add.collider(stars, stage)
+		this.physics.add.collider(bombs, stage)
 		this.physics.add.collider(this.player, stars, (_player, star) => {
 			collectStar(star)
 		})

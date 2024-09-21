@@ -7,7 +7,7 @@ export class Title extends Phaser.Scene {
 	private highScore: number
 
 	preload() {
-		this.load.image('sky', 'assets/sky.png')
+		this.load.image('background', 'assets/stage/background.png')
 	}
 
 	create() {
@@ -18,7 +18,7 @@ export class Title extends Phaser.Scene {
 		}
 		this.highScore = this.registry.get('highScore')
 
-		this.add.image(400, 300, 'sky')
+		this.add.image(400, 300, 'background')
 		this.add
 			.text(400, 200, 'sample game', { fontSize: '64px' })
 			.setOrigin(0.5, 0.5)

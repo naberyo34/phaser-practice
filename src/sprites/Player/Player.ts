@@ -16,18 +16,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
 		this.anims.create({
 			key: 'jump',
-			frames: [{ key: 'dude', frame: 0 }],
+			frames: [{ key: 'tama', frame: 0 }],
 			frameRate: 20,
 		})
 		this.anims.create({
 			key: 'walk',
-			frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 4 }),
+			frames: this.anims.generateFrameNumbers('tama', { start: 1, end: 4 }),
 			frameRate: 10,
 			repeat: -1,
 		})
 		this.anims.create({
 			key: 'stand',
-			frames: [{ key: 'dude', frame: 5 }],
+			frames: [{ key: 'tama', frame: 5 }],
 			frameRate: 20,
 		})
 	}
@@ -66,7 +66,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
 		// ジャンプ
 		if (this.cursors.space.isDown && this.body!.touching.down) {
-			this.setVelocityY(-330)
+			this.setVelocityY(-320)
 		}
 	}
 }
