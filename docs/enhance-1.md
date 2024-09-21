@@ -9,3 +9,21 @@
 ## プレイヤーのコードを分割する
 
 `Phaser.Physics.Arcade.Sprite` を継承するクラスを新規に定義した。書き方は試行錯誤が必要そう。
+
+## バウンドする / 下から潜り抜けられる床を作る
+
+see: https://github.com/phaserjs/examples/blob/master/public/src/physics/arcade/collider%20process%20callback.js
+
+```ts
+this.physics.add.collider(this.player, window, undefined, (player) => {
+  if (this.cursors.down.isDown) {
+    return false
+  }
+  return (
+    (player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body.velocity
+      .y > 0
+  )
+})
+```
+
+下キーを押すと降りられる。

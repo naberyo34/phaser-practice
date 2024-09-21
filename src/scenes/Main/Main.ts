@@ -6,13 +6,19 @@ export class Main extends Phaser.Scene {
 	}
 
 	preload() {
-		this.load.image('background', 'assets/stage/background.png')
-		this.load.image('floor', 'assets/stage/floor.png')
-		this.load.image('sofa', 'assets/stage/sofa.png')
-		this.load.image('bookshelf', 'assets/stage/bookshelf.png')
-		this.load.image('bottle', 'assets/bottle.png')
-		this.load.image('can', 'assets/can.png')
-		this.load.spritesheet('tama', 'assets/tama.png', {
+		this.load.image('background', 'assets/images/stage/background.png')
+		this.load.image('floor', 'assets/images/stage/floor.png')
+		this.load.image('sofa', 'assets/images/stage/sofa.png')
+		this.load.image('window', 'assets/images/stage/window.png')
+		this.load.image('bookshelf', 'assets/images/stage/bookshelf.png')
+		this.load.image('tvChan', 'assets/images/stage/tvChan.png')
+		this.load.image('trashBox', 'assets/images/stage/trashBox.png')
+		this.load.image('grass', 'assets/images/stage/grass.png')
+		this.load.image('grass2', 'assets/images/stage/grass2.png')
+		this.load.image('table', 'assets/images/stage/table.png')
+		this.load.image('bottle', 'assets/images/sprites/bottle.png')
+		this.load.image('can', 'assets/images/sprites/can.png')
+		this.load.spritesheet('tama', 'assets/images/sprites/tama.png', {
 			frameWidth: 64,
 			frameHeight: 76,
 		})
@@ -26,82 +32,88 @@ export class Main extends Phaser.Scene {
 		this.score = 0
 		this.cursors = this.input.keyboard!.createCursorKeys()
 		this.add.image(400, 300, 'background')
-		const scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px' })
+		const scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: '32px', fontFamily: 'BestTen-DOT' })
 
-		// 当たり判定を調整しなくてよいステージオブジェクトはここに入れる
 		const stage = this.physics.add.staticGroup()
 		stage.create(400, 537, 'floor')
-		stage.create(670, 353, 'bookshelf')
 
-		const sofa = this.physics.add.staticSprite(300, 429, 'sofa')
+		const bookshelf = this.physics.add.staticSprite(675, 353, 'bookshelf')
+
+		const sofa = this.physics.add.staticSprite(400, 430, 'sofa')
 		sofa.setSize(162, 48).setOffset(20, 48)
 
-		this.player = new Player(this, 100, 200, 'tama', this.cursors)
+		const window = this.physics.add.staticSprite(194, 179, 'window')
+		window.setSize(332, 14).setOffset(0, 156)
 
-		const stars = this.physics.add.group()
-		const star = stars.create(Phaser.Math.Between(0, 800), 16, 'bottle')
-		star.setBounce(1)
-		star.setCollideWorldBounds(true)
-		star.setVelocity(Phaser.Math.Between(-400, 400), 20)
-		const bombs = this.physics.add.group()
+		const tvChan = this.physics.add.staticSprite(723, 197, 'tvChan')
+		tvChan.setSize(86, 64).setOffset(0, 14)
 
-		/**
-		 * 星を取得したときの処理
-		 */
-		const collectStar = (
-			star:
-				| Phaser.Physics.Arcade.Body
-				| Phaser.Tilemaps.Tile
-				| Phaser.Types.Physics.Arcade.GameObjectWithBody,
-		) => {
-			;(star as Phaser.Physics.Arcade.Sprite).disableBody(true, true)
-			this.score += 10
-			scoreText.setText(`score: ${this.score}`)
+		const trashBox = this.physics.add.staticSprite(180, 423, 'trashBox')
 
-			// アイテムをすべて回収したら
-			if (stars.countActive(true) === 0) {
-				// アイテム復活
-				stars.children.iterate((child) => {
-					const star = child as Phaser.Physics.Arcade.Sprite
-					star.enableBody(true, Phaser.Math.Between(0, 800), 0, true, true)
-					star.setVelocity(Phaser.Math.Between(-400, 400), 20)
-					return true
-				})
+		this.physics.add.staticSprite(72, 209, 'grass')
+		this.physics.add.staticSprite(124, 208, 'grass2')
 
-				// 爆弾追加
-				const bomb = bombs.create(Phaser.Math.Between(0, 800), 16, 'can')
-				bomb.setBounce(1)
-				bomb.setCollideWorldBounds(true)
-				bomb.setVelocity(Phaser.Math.Between(-400, 400), 20)
-			}
-		}
+		this.player = new Player(this, 40, 440, 'tama', this.cursors)
 
-		/**
-		 * ゲームオーバー時の処理
-		 */
-		const gameOver = () => {
-			this.physics.pause()
-			this.player.dead()
-			this.add
-				.text(400, 200, 'you died', { fontSize: '64px', color: '#f00' })
-				.setOrigin(0.5, 0.5)
-			this.time.delayedCall(2000, () => {
-				if (this.score > this.registry.get('highScore')) {
-					this.registry.set('highScore', this.score)
-				}
-				this.scene.start('title')
-			})
-		}
+		// 以下、プレイヤーより手前に表示する
+
+		
+
+		const garbages = this.physics.add.group()
+		const bottle: Phaser.Physics.Arcade.Sprite = garbages.create(
+			Phaser.Math.Between(0, 800),
+			16,
+			'bottle',
+		)
+		bottle.setCollideWorldBounds(true)
+		bottle.setVelocity(Phaser.Math.Between(-400, 400), 20)
+		const can: Phaser.Physics.Arcade.Sprite = garbages.create(
+			Phaser.Math.Between(0, 800),
+			16,
+			'can',
+		)
+		can.setCollideWorldBounds(true)
+		can.setVelocity(Phaser.Math.Between(-400, 400), 20)
+
+		this.physics.add.staticSprite(400, 454, 'table')
 
 		// 接触判定
 		this.physics.add.collider(this.player, stage)
-		this.physics.add.collider(this.player, sofa)
-		this.physics.add.collider(stars, stage)
-		this.physics.add.collider(bombs, stage)
-		this.physics.add.collider(this.player, stars, (_player, star) => {
-			collectStar(star)
+		this.physics.add.collider(this.player, bookshelf, undefined, (player) => {
+			if (this.cursors.down.isDown) {
+				return false
+			}
+			return (
+				(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body.velocity
+					.y > 0
+			)
 		})
-		this.physics.add.collider(this.player, bombs, gameOver)
+		this.physics.add.collider(
+			this.player,
+			sofa,
+			() => {
+				// 上から乗ったときに大ジャンプする
+				this.player.setVelocityY(-640)
+			},
+			(player) => {
+				// 空中からの落下中のみ反応する
+				return (
+					(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body
+						.velocity.y > 0
+				)
+			},
+		)
+		this.physics.add.collider(this.player, window, undefined, (player) => {
+			if (this.cursors.down.isDown) {
+				return false
+			}
+			return (
+				(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body.velocity
+					.y > 0
+			)
+		})
+		this.physics.add.collider(this.player, tvChan)
+		this.physics.add.collider(garbages, stage)
 	}
 
 	update() {

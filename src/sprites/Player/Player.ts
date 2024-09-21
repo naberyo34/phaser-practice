@@ -13,6 +13,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		scene.physics.world.enable(this)
 
 		this.setCollideWorldBounds(true)
+		this.setGravityY(600)
 
 		this.anims.create({
 			key: 'jump',
@@ -33,21 +34,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	private cursors: Phaser.Types.Input.Keyboard.CursorKeys
-	private isDead = false
 	private isFlip = true
 
-	dead() {
-		this.isDead = true
-		this.setRotation(90)
-		this.setTint(0xff0000)
-		this.play('centerStand').flipY
-	}
-
 	update() {
-		if (this.isDead) {
-			return
-		}
-
 		this.flipX = this.isFlip
 
 		// 左右移動

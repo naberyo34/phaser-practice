@@ -4,8 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Phaser practice</title>
+    <link rel="preload" href="./assets/fonts/BestTen-DOT.otf" as="font" type="font/otf" crossorigin>
+    <style>
+      @font-face {
+          font-family: BestTen-DOT;
+          src: url('./assets/fonts/BestTen-DOT.otf');
+      }
+  </style>
   </head>
-  <body style="margin: 0">
+  <body style="display: flex; justify-content: center; margin: 0">
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

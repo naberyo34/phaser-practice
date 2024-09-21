@@ -7,7 +7,7 @@ export class Title extends Phaser.Scene {
 	private highScore: number
 
 	preload() {
-		this.load.image('background', 'assets/stage/background.png')
+		this.load.image('title', 'assets/images/title.png')
 	}
 
 	create() {
@@ -18,14 +18,14 @@ export class Title extends Phaser.Scene {
 		}
 		this.highScore = this.registry.get('highScore')
 
-		this.add.image(400, 300, 'background')
+		this.add.image(400, 300, 'title')
 		this.add
-			.text(400, 200, 'sample game', { fontSize: '64px' })
+			.text(400, 200, 'サンプルゲーム', { fontSize: '64px', fontFamily: 'BestTen-DOT' })
 			.setOrigin(0.5, 0.5)
 		this.add
-			.text(400, 400, 'press space key', { fontSize: '24px' })
+			.text(400, 400, 'スペースキーを押してね', { fontSize: '24px', fontFamily: 'BestTen-DOT' })
 			.setOrigin(0.5, 0.5)
-		this.add.text(16, 16, `highScore: ${this.highScore}`, { fontSize: '32px' })
+		this.add.text(16, 16, `ハイスコア: ${this.highScore}`, { fontSize: '32px', fontFamily: 'BestTen-DOT' })
 	}
 
 	update() {
