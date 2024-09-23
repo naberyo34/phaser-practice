@@ -5,15 +5,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		y: number,
 		texture: string,
 		cursors: Phaser.Types.Input.Keyboard.CursorKeys,
+		keyZ: Phaser.Input.Keyboard.Key,
 	) {
 		super(scene, x, y, texture)
 		this.cursors = cursors
+		this.keyZ = keyZ
 
 		scene.add.existing(this)
 		scene.physics.world.enable(this)
 
-		this.setCollideWorldBounds(true)
-		this.setGravityY(600)
+		this.setCollideWorldBounds(true).setGravityY(600)
 
 		this.anims.create({
 			key: 'jump',
@@ -34,7 +35,50 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	private cursors: Phaser.Types.Input.Keyboard.CursorKeys
+	private keyZ: Phaser.Input.Keyboard.Key
+	/**
+	 * スプライトを反転するか。
+	 * キャラクターが画面右側を向いているときに true となる。
+	 */
 	private isFlip = true
+	/**
+	 * プレイヤーに近接しているオブジェクト。
+	 * 外部からの set によってのみ更新される。
+	 */
+	private nearObject: Phaser.Physics.Arcade.Sprite | undefined
+	/**
+	 * プレイヤーがつかんでいるオブジェクト。
+	 */
+	private holdObject: Phaser.Physics.Arcade.Sprite | undefined
+
+	/**
+	 * 近接しているオブジェクトを設定する
+	 */
+	setNearObject(target: Phaser.Physics.Arcade.Sprite | undefined) {
+		this.nearObject = target
+	}
+
+	/**
+	 * 近接しているオブジェクトを「つかむ」
+	 */
+	hold() {
+		if (this.nearObject) {
+			this.holdObject = this.nearObject
+			this.holdObject.disableBody()
+		}
+	}
+
+	/**
+	 * 近接しているオブジェクトを「なげる」
+	 */
+	throw(direction: { x: number; y: number }) {
+		if (this.holdObject) {
+			this.holdObject.enableBody()
+			this.holdObject.setVelocity(direction.x, direction.y || -200)
+			this.holdObject.setBounce(0.5)
+			this.holdObject = undefined
+		}
+	}
 
 	update() {
 		this.flipX = this.isFlip
@@ -56,6 +100,46 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		// ジャンプ
 		if (this.cursors.space.isDown && this.body!.touching.down) {
 			this.setVelocityY(-320)
+		}
+
+		// つかんでいるオブジェクトを追従させる
+		if (this.holdObject) {
+			this.holdObject.x = this.x + (this.isFlip ? 30 : -30)
+			this.holdObject.y = this.y
+		}
+
+		// つかむ
+		if (Phaser.Input.Keyboard.JustDown(this.keyZ)) {
+			if (!this.holdObject && this.nearObject) {
+				this.hold()
+			}
+		}
+
+		// なげる
+		if (this.keyZ.isUp) {
+			if (this.holdObject) {
+				// 投げる方向
+				const direction = (() => {
+					const result = { x: 0, y: 0 }
+					if (this.cursors.up.isDown) {
+						result.y = -400
+					}
+
+					if (this.cursors.right.isDown) {
+						result.x = 400
+					}
+
+					if (this.cursors.down.isDown) {
+						result.y = 400
+					}
+
+					if (this.cursors.left.isDown) {
+						result.x = -400
+					}
+					return result
+				})()
+				this.throw(direction)
+			}
 		}
 	}
 }

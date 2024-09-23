@@ -20,7 +20,7 @@ export class Title extends Phaser.Scene {
 
 		this.add.image(400, 300, 'title')
 		this.add
-			.text(400, 200, 'サンプルゲーム', { fontSize: '64px', fontFamily: 'BestTen-DOT' })
+			.text(400, 200, 'おそうじ大作戦(仮)', { fontSize: '64px', fontFamily: 'BestTen-DOT' })
 			.setOrigin(0.5, 0.5)
 		this.add
 			.text(400, 400, 'スペースキーを押してね', { fontSize: '24px', fontFamily: 'BestTen-DOT' })

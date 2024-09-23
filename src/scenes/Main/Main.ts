@@ -1,3 +1,4 @@
+import { Garbage } from '../../sprites/Garbage/Garbage'
 import { Player } from '../../sprites/Player/Player'
 
 export class Main extends Phaser.Scene {
@@ -25,14 +26,20 @@ export class Main extends Phaser.Scene {
 	}
 
 	private cursors: Phaser.Types.Input.Keyboard.CursorKeys
-	private score: number
+	private keyZ: Phaser.Input.Keyboard.Key
+	private score = 0
 	private player: Player
-
+	private garbages: Phaser.Physics.Arcade.Group
+	
 	create() {
-		this.score = 0
+		// 初期化
 		this.cursors = this.input.keyboard!.createCursorKeys()
+		this.keyZ = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Z)
+
+		// オブジェクト配置
 		this.add.image(400, 300, 'background')
-		const scoreText = this.add.text(16, 16, 'スコア: 0', { fontSize: '32px', fontFamily: 'BestTen-DOT' })
+
+		const scoreText = this.add.text(16, 16, 'スコア: 0')
 
 		const stage = this.physics.add.staticGroup()
 		stage.create(400, 537, 'floor')
@@ -48,46 +55,45 @@ export class Main extends Phaser.Scene {
 		const tvChan = this.physics.add.staticSprite(723, 197, 'tvChan')
 		tvChan.setSize(86, 64).setOffset(0, 14)
 
-		const trashBox = this.physics.add.staticSprite(180, 423, 'trashBox')
-
 		this.physics.add.staticSprite(72, 209, 'grass')
 		this.physics.add.staticSprite(124, 208, 'grass2')
 
-		this.player = new Player(this, 40, 440, 'tama', this.cursors)
+		const trashBox = this.physics.add.staticSprite(180, 423, 'trashBox')
+		trashBox.setSize(180, 80).setOffset(0, 0)
 
-		// 以下、プレイヤーより手前に表示する
+		this.player = new Player(this, 40, 440, 'tama', this.cursors, this.keyZ)
 
-		
+		this.garbages = this.physics.add.group()
 
-		const garbages = this.physics.add.group()
-		const bottle: Phaser.Physics.Arcade.Sprite = garbages.create(
-			Phaser.Math.Between(0, 800),
-			16,
-			'bottle',
-		)
-		bottle.setCollideWorldBounds(true)
-		bottle.setVelocity(Phaser.Math.Between(-400, 400), 20)
-		const can: Phaser.Physics.Arcade.Sprite = garbages.create(
-			Phaser.Math.Between(0, 800),
-			16,
-			'can',
-		)
-		can.setCollideWorldBounds(true)
-		can.setVelocity(Phaser.Math.Between(-400, 400), 20)
+		for (let i = 0; i < 20; i++) {
+			this.garbages.add(
+				new Garbage(
+					this,
+					Phaser.Math.Between(0, 800),
+					Phaser.Math.Between(0, 400),
+					'can',
+				),
+			)
+		}
 
-		this.physics.add.staticSprite(400, 454, 'table')
+		for (let i = 0; i < 10; i++) {
+			this.garbages.add(
+				new Garbage(
+					this,
+					Phaser.Math.Between(0, 800),
+					Phaser.Math.Between(0, 400),
+					'bottle',
+				),
+			)
+		}
+
+		this.garbages.children.iterate((garbage) => {
+			;(garbage as Garbage).setCollideWorldBounds()
+			return true
+		})
 
 		// 接触判定
 		this.physics.add.collider(this.player, stage)
-		this.physics.add.collider(this.player, bookshelf, undefined, (player) => {
-			if (this.cursors.down.isDown) {
-				return false
-			}
-			return (
-				(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body.velocity
-					.y > 0
-			)
-		})
 		this.physics.add.collider(
 			this.player,
 			sofa,
@@ -112,11 +118,49 @@ export class Main extends Phaser.Scene {
 					.y > 0
 			)
 		})
+		this.physics.add.collider(this.player, bookshelf, undefined, (player) => {
+			if (this.cursors.down.isDown) {
+				return false
+			}
+			return (
+				(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body.velocity
+					.y > 0
+			)
+		})
 		this.physics.add.collider(this.player, tvChan)
-		this.physics.add.collider(garbages, stage)
+
+		this.physics.add.collider(this.garbages, this.garbages)
+		this.physics.add.collider(this.garbages, stage)
+		this.physics.add.collider(this.garbages, window)
+		this.physics.add.collider(this.garbages, bookshelf)
+		this.physics.add.collider(this.garbages, tvChan)
+		this.physics.add.overlap(this.garbages, trashBox, (garbage, _) => {
+			;(garbage as Garbage).disableBody(true, true)
+			this.score += 10
+			scoreText.setText(`Score: ${this.score}`)
+		})
 	}
 
 	update() {
 		this.player.update()
+
+		// プレイヤーに近接しているゴミがあるか判定する
+		let nearObject: Garbage | undefined = undefined
+		this.garbages.children.iterate((garbage) => {
+			const isNear =
+				Phaser.Math.Distance.Between(
+					(garbage as Garbage).x,
+					(garbage as Garbage).y,
+					this.player.x,
+					this.player.y,
+				) < 30
+			;(garbage as Garbage).setNear(isNear)
+			if (isNear) {
+				nearObject = garbage as Garbage
+				return false
+			}
+			return true
+		})
+		this.player.setNearObject(nearObject)
 	}
 }
