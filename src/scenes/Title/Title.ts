@@ -1,3 +1,5 @@
+import { defaultFontStyle } from '../../utils/fontStyle'
+
 export class Title extends Phaser.Scene {
 	constructor() {
 		super({ key: 'title', active: true })
@@ -7,7 +9,6 @@ export class Title extends Phaser.Scene {
 	private highScore: number
 
 	preload() {
-		this.load.image('title', 'assets/images/title.png')
 	}
 
 	create() {
@@ -18,14 +19,21 @@ export class Title extends Phaser.Scene {
 		}
 		this.highScore = this.registry.get('highScore')
 
-		this.add.image(400, 300, 'title')
 		this.add
-			.text(400, 200, 'おそうじ大作戦(仮)', { fontSize: '64px', fontFamily: 'BestTen-DOT' })
+			.text(400, 200, 'おそうじ大作戦(仮)', {
+				...defaultFontStyle,
+				fontSize: '64px',
+				strokeThickness: 12,
+				shadow: {
+					...defaultFontStyle.shadow,
+					offsetY: 8,
+				},
+			})
 			.setOrigin(0.5, 0.5)
 		this.add
-			.text(400, 400, 'スペースキーを押してね', { fontSize: '24px', fontFamily: 'BestTen-DOT' })
+			.text(400, 400, 'スペースキーを押してね', { ...defaultFontStyle })
 			.setOrigin(0.5, 0.5)
-		this.add.text(16, 16, `ハイスコア: ${this.highScore}`, { fontSize: '32px', fontFamily: 'BestTen-DOT' })
+		this.add.text(16, 16, `ハイスコア: ${this.highScore}`, { ...defaultFontStyle })
 	}
 
 	update() {
