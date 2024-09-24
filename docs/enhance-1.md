@@ -125,3 +125,36 @@ update() {
 ```
 
 `disableBody()` で、掴んでいる間だけ重力の影響を受けなくすることでオブジェクトがガタガタ移動するのを防いでいる。
+
+## タイムアップ制にする
+
+```ts
+this.timer = this.time.addEvent({
+  delay: 1000,
+  callback: this.countDown,
+  callbackScope: this,
+  loop: true,
+})
+```
+
+```ts
+countDown() {
+  this.timerCount -= 1
+  if (this.timerCount === 0) {
+    this.timer.destroy()
+  }
+}
+```
+
+```ts
+update() {
+  // ...
+  // タイマー
+  this.timerText.setText(this.timerCount.toString())
+  if (this.timerCount === 0) {
+    this.gameOver()
+  }
+}
+```
+
+これが多分シンプル。

@@ -43,21 +43,26 @@ export class Main extends Phaser.Scene {
 	private score = 0
 	private player: Player
 	private garbages: Phaser.Physics.Arcade.Group
+	private timer: Phaser.Time.TimerEvent
+	private timerCount = 5
+	private timerText: Phaser.GameObjects.Text
 
 	create() {
 		// 初期化
 		this.cursors = this.input.keyboard!.createCursorKeys()
 		this.keyZ = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Z)
+		this.timer = this.time.addEvent({
+			delay: 1000,
+			callback: this.countDown,
+			callbackScope: this,
+			loop: true,
+		})
 		const bgm = this.sound.add('bgm')
 		bgm.setLoop(true)
 		bgm.play()
 
 		// オブジェクト配置
 		this.add.image(400, 300, 'background')
-
-		const scoreText = this.add.text(16, 16, '0pt', {
-			...defaultFontStyle,
-		})
 
 		const stage = this.physics.add.staticGroup()
 		stage.create(400, 537, 'floor')
@@ -79,6 +84,17 @@ export class Main extends Phaser.Scene {
 		const trashBox = this.physics.add.staticSprite(180, 436, 'trashBox')
 		trashBox.setSize(80, 20).setOffset(0, 0)
 
+		const scoreText = this.add.text(16, 16, '0pt', {
+			...defaultFontStyle,
+		})
+
+		this.timerText = this.add
+			.text(400, 536, '30', {
+				...defaultFontStyle,
+				fontSize: '64px',
+			})
+			.setOrigin(0.5, 0.5)
+
 		this.player = new Player(
 			this,
 			40,
@@ -91,15 +107,15 @@ export class Main extends Phaser.Scene {
 
 		this.garbages = this.physics.add.group()
 
-		for (let i = 0; i < 20; i++) {
+		for (let i = 0; i < 30; i++) {
 			this.garbages.add(
 				new CanHoldObject(
 					this,
-					Phaser.Math.Between(200, 800),
+					Phaser.Math.Between(0, 800),
 					Phaser.Math.Between(0, 400),
-					'garbageBag',
+					'wastepaper',
 					this.sound,
-					50,
+					10,
 				),
 			)
 		}
@@ -123,19 +139,6 @@ export class Main extends Phaser.Scene {
 					this,
 					Phaser.Math.Between(0, 800),
 					Phaser.Math.Between(0, 400),
-					'wastepaper',
-					this.sound,
-					10,
-				),
-			)
-		}
-
-		for (let i = 0; i < 20; i++) {
-			this.garbages.add(
-				new CanHoldObject(
-					this,
-					Phaser.Math.Between(0, 800),
-					Phaser.Math.Between(0, 400),
 					'bottle',
 					this.sound,
 					30,
@@ -143,8 +146,21 @@ export class Main extends Phaser.Scene {
 			)
 		}
 
+		for (let i = 0; i < 10; i++) {
+			this.garbages.add(
+				new CanHoldObject(
+					this,
+					Phaser.Math.Between(200, 800),
+					Phaser.Math.Between(0, 400),
+					'garbageBag',
+					this.sound,
+					50,
+				),
+			)
+		}
+
 		this.garbages.children.iterate((garbage) => {
-			;(garbage as CanHoldObject).setCollideWorldBounds()
+			;(garbage as CanHoldObject).setCollideWorldBounds().setBounce(0.5)
 			return true
 		})
 
@@ -205,21 +221,22 @@ export class Main extends Phaser.Scene {
 			this.sound.play('shoot')
 			this.tweens.add({
 				targets: trashBox,
-				duration: 100,
+				duration: 80,
 				repeat: 0,
 				yoyo: true,
-				scale: 1.1,
+				scale: 1.2,
 			})
 			garbage.disableBody(true, true)
 			const point = garbage.getPoint()
-			const score = this.add.text(180, 436, `+${point}pt`, {
-				...pointFontStyle,
+			const score = this.add.text(180, 406, `+${point}pt`, {
+				...pointFontStyle(point),
 			})
 			this.tweens.add({
 				targets: score,
-				duration: 1000,
+				ease: 'Sine.easeInOut',
+				duration: 800,
 				repeat: 0,
-				y: 406,
+				y: 396,
 				alpha: 0,
 			})
 			this.score += point
@@ -227,8 +244,31 @@ export class Main extends Phaser.Scene {
 		})
 	}
 
+	countDown() {
+		this.timerCount -= 1
+		if (this.timerCount === 0) {
+			this.timer.destroy()
+		}
+	}
+
+	gameOver() {
+		this.physics.pause()
+		this.add
+			.text(400, 300, 'そこまで！', {
+				...defaultFontStyle,
+				fontSize: '64px',
+			})
+			.setOrigin(0.5, 0.5)
+	}
+
 	update() {
 		this.player.update()
+
+		// タイマー
+		this.timerText.setText(this.timerCount.toString())
+		if (this.timerCount === 0) {
+			this.gameOver()
+		}
 
 		// プレイヤーに近接しているオブジェクトがあるか判定する
 		let nearObject: CanHoldObject | undefined = undefined
