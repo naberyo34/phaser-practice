@@ -4,7 +4,6 @@ export const defaultFontStyle: Phaser.Types.GameObjects.Text.TextStyle = {
 	stroke: '#423934',
 	strokeThickness: 6,
 	shadow: {
-		offsetX: 4,
 		offsetY: 4,
 		color: '#423934',
 		stroke: true,

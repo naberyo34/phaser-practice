@@ -1,5 +1,8 @@
 import type { CanHoldObject } from '../CanHoldObject/CanHoldObject'
 
+/**
+ * プレイヤーが操作するキャラクター
+ */
 export class Player extends Phaser.Physics.Arcade.Sprite {
 	constructor(
 		scene: Phaser.Scene,

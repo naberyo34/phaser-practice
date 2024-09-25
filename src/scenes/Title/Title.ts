@@ -8,16 +8,16 @@ export class Title extends Phaser.Scene {
 	private cursors: Phaser.Types.Input.Keyboard.CursorKeys
 	private highScore: number
 
-	preload() {
+	init() {
+		this.cursors = this.input.keyboard!.createCursorKeys()
+		// ローカルストレージにハイスコアが記録されていたら呼び出す
+		this.highScore = Number.parseInt(localStorage.getItem('highScore') ?? '0')
 	}
 
-	create() {
-		this.cursors = this.input.keyboard!.createCursorKeys()
+	preload() {}
 
-		if (!this.registry.get('highScore')) {
-			this.registry.set('highScore', 0)
-		}
-		this.highScore = this.registry.get('highScore')
+	create() {
+		this.sound.pauseAll()
 
 		this.add
 			.text(400, 200, 'おそうじ大作戦(仮)', {
@@ -33,7 +33,9 @@ export class Title extends Phaser.Scene {
 		this.add
 			.text(400, 400, 'スペースキーを押してね', { ...defaultFontStyle })
 			.setOrigin(0.5, 0.5)
-		this.add.text(16, 16, `ハイスコア: ${this.highScore}`, { ...defaultFontStyle })
+		this.add.text(16, 16, `ハイスコア: ${this.highScore}`, {
+			...defaultFontStyle,
+		})
 	}
 
 	update() {

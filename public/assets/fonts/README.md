@@ -1,0 +1,1 @@
+font by https://booth.pm/ja/items/2747965

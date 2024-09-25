@@ -1,9 +1,14 @@
+export type ObjectType = 'wastepaper' | 'can' | 'bottle' | 'garbageBag'
+
+/**
+ * 「つかむ」「なげる」操作が可能なオブジェクト全般
+ */
 export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 	constructor(
 		scene: Phaser.Scene,
 		x: number,
 		y: number,
-		texture: string,
+		texture: ObjectType,
 		sound:
 			| Phaser.Sound.NoAudioSoundManager
 			| Phaser.Sound.HTML5AudioSoundManager
@@ -29,6 +34,15 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 		| Phaser.Sound.NoAudioSound
 		| Phaser.Sound.HTML5AudioSound
 		| Phaser.Sound.WebAudioSound
+
+	/**
+	 * このオブジェクトの種類。
+	 * texture の key と同じ文字列が与えられる。
+	 */
+	private objectType: ObjectType
+	getObjectType() {
+		return this.objectType
+	}
 
 	/**
 	 * 得点
