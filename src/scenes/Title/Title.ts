@@ -33,7 +33,7 @@ export class Title extends Phaser.Scene {
 		this.add
 			.text(400, 400, 'スペースキーを押してね', { ...defaultFontStyle })
 			.setOrigin(0.5, 0.5)
-		this.add.text(16, 16, `ハイスコア: ${this.highScore}`, {
+		this.add.text(16, 16, `ハイスコア: ${this.highScore}pt`, {
 			...defaultFontStyle,
 		})
 	}

@@ -81,6 +81,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 	 * プレイヤーがつかんでいるオブジェクト。
 	 */
 	private holdObject: CanHoldObject | undefined
+	getIsHold() {
+		return !!this.holdObject
+	}
 
 	/**
 	 * 近接しているオブジェクトを設定する
@@ -108,7 +111,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 			this.sound.play('throw')
 			this.holdObject.setThrowed(true)
 			this.holdObject.enableBody()
-			this.holdObject.setVelocity(direction.x, direction.y || -200)
+			this.holdObject.setVelocity(direction.x, direction.y)
 			this.holdObject = undefined
 		}
 	}
@@ -148,7 +151,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		// ジャンプ
 		if (this.cursors.space.isDown && this.body!.touching.down) {
 			this.sound.play('jump')
-			this.setVelocityY(-320)
+			this.setVelocityY(-550)
 		}
 
 		// つかんでいるオブジェクトを追従させる
@@ -170,20 +173,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 				// 投げる方向
 				const direction = (() => {
 					const result = { x: 0, y: 0 }
-					if (this.cursors.up.isDown) {
-						result.y = -400
-					}
-
-					if (this.cursors.right.isDown) {
-						result.x = 400
-					}
-
-					if (this.cursors.down.isDown) {
-						result.y = 400
-					}
-
 					if (this.cursors.left.isDown) {
-						result.x = -400
+						result.x = -500
+					}
+					if (this.cursors.right.isDown) {
+						result.x = 500
+					}
+					if (this.cursors.up.isDown) {
+						result.y = -500
+					}
+					if (this.cursors.down.isDown) {
+						result.y = 500
+					}
+					// 上下入力をしていない場合はちょっと上向きに飛ばす
+					if (result.y === 0) {
+						result.y = -100
 					}
 					return result
 				})()

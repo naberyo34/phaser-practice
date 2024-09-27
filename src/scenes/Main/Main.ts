@@ -40,7 +40,6 @@ export class Main extends Phaser.Scene {
 			loop: true,
 		})
 		this.timerCount = 5
-
 		this.score = 0
 		this.objectCount = {
 			wastepaper: { label: '紙くず', count: 0 },
@@ -56,14 +55,19 @@ export class Main extends Phaser.Scene {
 		// Image
 		this.load.image('background', 'assets/images/stage/background.png')
 		this.load.image('floor', 'assets/images/stage/floor.png')
-		this.load.image('sofa', 'assets/images/stage/sofa.png')
 		this.load.image('window', 'assets/images/stage/window.png')
-		this.load.image('bookshelf', 'assets/images/stage/bookshelf.png')
-		this.load.image('tvChan', 'assets/images/stage/tvChan.png')
+		this.load.image('lamp', 'assets/images/stage/lamp.png')
+		this.load.image('shelf', 'assets/images/stage/shelf.png')
+		this.load.image('shelf2', 'assets/images/stage/shelf2.png')
+		this.load.image('box', 'assets/images/stage/box.png')
+		this.load.image('box2', 'assets/images/stage/box2.png')
 		this.load.image('trashBox', 'assets/images/stage/trashBox.png')
+		this.load.image('trashBox2', 'assets/images/stage/trashBox2.png')
+		this.load.image('sofa', 'assets/images/stage/sofa.png')
+		this.load.image('base', 'assets/images/stage/base.png')
+		this.load.image('tvChan', 'assets/images/stage/tvChan.png')
 		this.load.image('grass', 'assets/images/stage/grass.png')
 		this.load.image('grass2', 'assets/images/stage/grass2.png')
-		this.load.image('table', 'assets/images/stage/table.png')
 		this.load.image('wastepaper', 'assets/images/sprites/wastepaper.png')
 		this.load.image('garbageBag', 'assets/images/sprites/garbageBag.png')
 		this.load.image('bottle', 'assets/images/sprites/bottle.png')
@@ -95,32 +99,31 @@ export class Main extends Phaser.Scene {
 		// オブジェクト
 		this.add.image(400, 300, 'background')
 
-		const stage = this.physics.add.staticGroup()
-		stage.create(400, 537, 'floor')
+		// 下キーで降りることができるオブジェクト
+		const canLeaveObjects = this.physics.add.staticGroup()
+		canLeaveObjects.create(81, 192, 'base')
+		canLeaveObjects.create(720, 192, 'base')
+		canLeaveObjects
+			.create(400, 211, 'window')
+			.setSize(244, 16)
+			.setOffset(0, 126)
+		canLeaveObjects.create(109, 474, 'shelf')
+		canLeaveObjects.create(720, 447, 'shelf2')
 
-		const bookshelf = this.physics.add.staticSprite(689, 353, 'bookshelf')
+		// 常に接触するオブジェクト
+		const staticObjects = this.physics.add.staticGroup()
+		staticObjects.create(400, 572, 'floor')
+		staticObjects.create(78, 381, 'box')
+		staticObjects.create(115, 341, 'box2')
+		staticObjects.create(757, 319, 'tvChan').setSize(86, 64).setOffset(0, 14)
 
-		const sofa = this.physics.add.staticSprite(400, 430, 'sofa')
-		sofa.setSize(162, 48).setOffset(20, 48)
-
-		const window = this.physics.add.staticSprite(194, 179, 'window')
-		window.setSize(332, 14).setOffset(0, 156)
-
-		const tvChan = this.physics.add.staticSprite(757, 197, 'tvChan')
-		tvChan.setSize(86, 64).setOffset(0, 14)
-
-		this.physics.add.staticSprite(72, 209, 'grass')
-		this.physics.add.staticSprite(124, 208, 'grass2')
-
-		const trashBox = this.physics.add.staticSprite(180, 436, 'trashBox')
-		trashBox.setSize(80, 20).setOffset(0, 0)
-
-		this.timerText = this.add
-			.text(400, 64, '30', {
-				...defaultFontStyle,
-				fontSize: '48px',
-			})
-			.setOrigin(0.5, 0.5)
+		// その他のオブジェクト
+		const sofa = this.physics.add
+			.staticSprite(400, 498, 'sofa')
+			.setSize(162, 48)
+			.setOffset(20, 48)
+		const trashBox = this.physics.add.staticSprite(258, 515, 'trashBox')
+		const trashBox2 = this.physics.add.staticSprite(552, 515, 'trashBox2')
 
 		this.player = new Player(
 			this,
@@ -133,51 +136,31 @@ export class Main extends Phaser.Scene {
 		)
 
 		this.garbages = this.physics.add.group()
-		for (let i = 0; i < 30; i++) {
+		for (let i = 0; i < 80; i++) {
+			const random = ((): ObjectType => {
+				const int = Phaser.Math.Between(1, 100)
+				// 40%
+				if (int <= 40) {
+					return 'wastepaper'
+				}
+				// 30%
+				if (int <= 70) {
+					return 'can'
+				}
+				// 20%
+				if (int <= 90) {
+					return 'bottle'
+				}
+				// 10%
+				return 'garbageBag'
+			})()
 			this.garbages.add(
 				new CanHoldObject(
 					this,
 					Phaser.Math.Between(0, 800),
-					Phaser.Math.Between(0, 400),
-					'wastepaper',
+					Phaser.Math.Between(0, 500),
+					random,
 					this.sound,
-					10,
-				),
-			)
-		}
-		for (let i = 0; i < 20; i++) {
-			this.garbages.add(
-				new CanHoldObject(
-					this,
-					Phaser.Math.Between(0, 800),
-					Phaser.Math.Between(0, 400),
-					'can',
-					this.sound,
-					20,
-				),
-			)
-		}
-		for (let i = 0; i < 20; i++) {
-			this.garbages.add(
-				new CanHoldObject(
-					this,
-					Phaser.Math.Between(0, 800),
-					Phaser.Math.Between(0, 400),
-					'bottle',
-					this.sound,
-					30,
-				),
-			)
-		}
-		for (let i = 0; i < 10; i++) {
-			this.garbages.add(
-				new CanHoldObject(
-					this,
-					Phaser.Math.Between(200, 800),
-					Phaser.Math.Between(0, 400),
-					'garbageBag',
-					this.sound,
-					50,
 				),
 			)
 		}
@@ -186,8 +169,29 @@ export class Main extends Phaser.Scene {
 			return true
 		})
 
+		this.timerText = this.add
+			.text(400, 64, '30', {
+				...defaultFontStyle,
+				fontSize: '48px',
+			})
+			.setOrigin(0.5, 0.5)
+
 		// 接触判定
-		this.physics.add.collider(this.player, stage)
+		this.physics.add.collider(this.player, staticObjects)
+		this.physics.add.collider(
+			this.player,
+			canLeaveObjects,
+			undefined,
+			(player) => {
+				if (!this.player.getIsHold() && this.cursors.down.isDown) {
+					return false
+				}
+				return (
+					(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body
+						.velocity.y > 0
+				)
+			},
+		)
 		this.physics.add.collider(
 			this.player,
 			sofa,
@@ -198,7 +202,7 @@ export class Main extends Phaser.Scene {
 				}
 				// 上から乗ったときに大ジャンプする
 				this.sound.play('jumpLong')
-				this.player.setVelocityY(-640)
+				this.player.setVelocityY(-800)
 			},
 			(player) => {
 				// 空中からの落下中のみ反応する
@@ -208,66 +212,25 @@ export class Main extends Phaser.Scene {
 				)
 			},
 		)
-		this.physics.add.collider(this.player, window, undefined, (player) => {
-			if (this.cursors.down.isDown) {
-				return false
-			}
-			return (
-				(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body.velocity
-					.y > 0
+
+		this.physics.add.collider(this.garbages, staticObjects)
+		this.physics.add.collider(this.garbages, canLeaveObjects)
+		this.physics.add.collider(this.garbages, this.garbages)
+
+		this.physics.add.overlap(trashBox, this.garbages, (trashBox, garbage) => {
+			this.trash(
+				garbage as CanHoldObject,
+				trashBox as Phaser.Types.Physics.Arcade.GameObjectWithBody,
+				'burnable',
 			)
 		})
-		this.physics.add.collider(this.player, bookshelf, undefined, (player) => {
-			if (this.cursors.down.isDown) {
-				return false
-			}
-			return (
-				(player as Phaser.Types.Physics.Arcade.GameObjectWithBody).body.velocity
-					.y > 0
+
+		this.physics.add.overlap(trashBox2, this.garbages, (trashBox, garbage) => {
+			this.trash(
+				garbage as CanHoldObject,
+				trashBox as Phaser.Types.Physics.Arcade.GameObjectWithBody,
+				'unburnable',
 			)
-		})
-		this.physics.add.collider(this.player, tvChan)
-
-		this.physics.add.collider(this.garbages, stage)
-		this.physics.add.collider(this.garbages, window)
-		this.physics.add.collider(this.garbages, bookshelf)
-		this.physics.add.collider(this.garbages, tvChan)
-
-		// ゴミ捨て時の処理
-		this.physics.add.overlap(trashBox, this.garbages, (trashBox, _garbage) => {
-			const garbage = _garbage as CanHoldObject
-			// プレイヤーによって投げられて overlap したとき以外は無視
-			if (!garbage.getThrowed()) {
-				return
-			}
-
-			this.sound.play('shoot')
-			this.tweens.add({
-				targets: trashBox,
-				duration: 80,
-				repeat: 0,
-				yoyo: true,
-				scale: 1.2,
-			})
-			garbage.destroy(true)
-			const point = garbage.getPoint()
-			const score = this.add.text(180, 406, `+${point}pt`, {
-				...pointFontStyle(point),
-			})
-			this.tweens.add({
-				targets: score,
-				ease: 'Sine.easeInOut',
-				duration: 800,
-				repeat: 0,
-				y: 396,
-				alpha: 0,
-				onComplete: () => {
-					// 表示完了したら非表示になったスコアはオブジェクトも消しておく
-					score.destroy(true)
-				}
-			})
-			this.score += point
-			this.objectCount[garbage.getObjectType()].count++
 		})
 	}
 
@@ -328,6 +291,52 @@ export class Main extends Phaser.Scene {
 	}
 
 	/**
+	 * ゴミ捨て
+	 */
+	trash(
+		garbage: CanHoldObject,
+		trashBox: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+		trashBoxCategory: 'burnable' | 'unburnable',
+	) {
+		// プレイヤーによって投げられて overlap したとき以外は無視
+		if (!garbage.getThrowed()) {
+			return
+		}
+
+		this.sound.play('shoot')
+		this.tweens.add({
+			targets: trashBox,
+			duration: 80,
+			repeat: 0,
+			yoyo: true,
+			scale: 1.2,
+		})
+		garbage.disableBody(true, true)
+
+		// 正しく分別されていたらアイテムごとのポイント、間違えていたら1ptを獲得
+		const point =
+			garbage.getObjectCategory() === trashBoxCategory ? garbage.getPoint() : 1
+		const scoreX = trashBox.body.x + 20
+		const scoreY = trashBox.body.y
+		const score = this.add.text(scoreX, scoreY, `+${point}pt`, {
+			...pointFontStyle(point),
+		})
+		this.tweens.add({
+			targets: score,
+			ease: 'Sine.easeInOut',
+			duration: 800,
+			repeat: 0,
+			y: scoreY - 40,
+			alpha: 0,
+			onComplete: () => {
+				score.destroy(true)
+			},
+		})
+		this.score += point
+		this.objectCount[garbage.getObjectType()].count++
+	}
+
+	/**
 	 * カウントダウン
 	 * 1秒ごとに呼ばれる想定。0秒になったらタイマーを破棄する。
 	 */
@@ -350,7 +359,9 @@ export class Main extends Phaser.Scene {
 		this.sound.play('timeUp')
 
 		// ハイスコアを達成していたらローカルストレージに書き込んでおく
-		if (this.score > Number.parseInt(localStorage.getItem('highScore') ?? '0')) {
+		if (
+			this.score > Number.parseInt(localStorage.getItem('highScore') ?? '0')
+		) {
 			localStorage.setItem('highScore', this.score.toString())
 		}
 
@@ -378,6 +389,7 @@ export class Main extends Phaser.Scene {
 		this.time.delayedCall(2000, () => {
 			this.timerText.destroy(true)
 			timeUpText.destroy(true)
+			this.add.rectangle(400, 300, 800, 600, 0xffffff, 0.5)
 			this.add
 				.text(400, 80, '結果発表', {
 					...defaultFontStyle,

@@ -14,6 +14,9 @@ export const pointFontStyle: (
 	point: number,
 ) => Phaser.Types.GameObjects.Text.TextStyle = (point) => {
 	const variableStyle = (() => {
+		if (point <= 9) {
+			return { fontSize: '12px', color: '#423934' }
+		}
 		if (point <= 10) {
 			return { fontSize: '16px', color: '#423934' }
 		}

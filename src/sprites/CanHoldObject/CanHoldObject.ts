@@ -1,4 +1,15 @@
 export type ObjectType = 'wastepaper' | 'can' | 'bottle' | 'garbageBag'
+export type ObjectCategory = 'burnable' | 'unburnable' | 'treasure'
+
+const objectData: Record<
+	ObjectType,
+	{ category: ObjectCategory; point: number }
+> = {
+	wastepaper: { category: 'burnable', point: 10 },
+	can: { category: 'unburnable', point: 20 },
+	bottle: { category: 'unburnable', point: 30 },
+	garbageBag: { category: 'burnable', point: 50 },
+}
 
 /**
  * 「つかむ」「なげる」操作が可能なオブジェクト全般
@@ -13,12 +24,15 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 			| Phaser.Sound.NoAudioSoundManager
 			| Phaser.Sound.HTML5AudioSoundManager
 			| Phaser.Sound.WebAudioSoundManager,
-		point: number,
 	) {
 		super(scene, x, y, texture)
 		this.sound = sound
 		this.boundSound = this.sound.add('bound')
-		this.point = point
+		this.objectType = texture
+		this.objectCategory = objectData[this.objectType].category
+		this.point = objectData[this.objectType].point
+		this.isNear = false
+		this.isThrowed = false
 
 		scene.add.existing(this)
 		scene.physics.world.enable(this)
@@ -45,9 +59,17 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	/**
+	 * 燃えるゴミ、燃えないゴミ、おたから
+	 */
+	private objectCategory: ObjectCategory
+	getObjectCategory() {
+		return this.objectCategory
+	}
+
+	/**
 	 * 得点
 	 */
-	private point = 0
+	private point: number
 	getPoint() {
 		return this.point
 	}
@@ -56,7 +78,7 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 	 * このオブジェクトがあるオブジェクトに近接しているか。
 	 * setNear によってのみ更新される。
 	 */
-	private isNear = false
+	private isNear: boolean
 	setNear(isNear: boolean) {
 		this.isNear = isNear
 		if (this.isNear) {
@@ -70,7 +92,7 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 	 * このオブジェクトがプレイヤーによって投げられたか。
 	 * setThrowed によってのみ更新される。
 	 */
-	private isThrowed = false
+	private isThrowed
 	getThrowed() {
 		return this.isThrowed
 	}
@@ -82,8 +104,6 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 		if (!this.active) {
 			return
 		}
-
-		this.setBounce(this.isThrowed ? 0.8 : 0)
 
 		const blocked =
 			this.body!.blocked.up ||
