@@ -151,7 +151,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		// ジャンプ
 		if (this.cursors.space.isDown && this.body!.touching.down) {
 			this.sound.play('jump')
-			this.setVelocityY(-550)
+			this.setVelocityY(-525)
 		}
 
 		// つかんでいるオブジェクトを追従させる
@@ -174,16 +174,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 				const direction = (() => {
 					const result = { x: 0, y: 0 }
 					if (this.cursors.left.isDown) {
-						result.x = -500
+						result.x = -400
 					}
 					if (this.cursors.right.isDown) {
-						result.x = 500
+						result.x = 400
 					}
 					if (this.cursors.up.isDown) {
-						result.y = -500
+						result.y = -400
 					}
 					if (this.cursors.down.isDown) {
-						result.y = 500
+						result.y = 400
 					}
 					// 上下入力をしていない場合はちょっと上向きに飛ばす
 					if (result.y === 0) {

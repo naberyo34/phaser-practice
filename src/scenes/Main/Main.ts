@@ -28,6 +28,9 @@ export class Main extends Phaser.Scene {
 	private score: number
 	private objectCount: Record<ObjectType, { label: string; count: number }>
 
+	private lastTimePressDownKey: number
+	private doublePressDownKey: boolean
+
 	init() {
 		this.isGameOver = false
 		this.isGameEnd = false
@@ -39,7 +42,7 @@ export class Main extends Phaser.Scene {
 			callbackScope: this,
 			loop: true,
 		})
-		this.timerCount = 5
+		this.timerCount = 30
 		this.score = 0
 		this.objectCount = {
 			wastepaper: { label: '紙くず', count: 0 },
@@ -47,6 +50,8 @@ export class Main extends Phaser.Scene {
 			bottle: { label: 'ペットボトル', count: 0 },
 			garbageBag: { label: 'ゴミ袋', count: 0 },
 		}
+		this.lastTimePressDownKey = 0
+		this.doublePressDownKey = false
 
 		this.physics.resume()
 	}
@@ -123,7 +128,7 @@ export class Main extends Phaser.Scene {
 			.setSize(162, 48)
 			.setOffset(20, 48)
 		const trashBox = this.physics.add.staticSprite(258, 515, 'trashBox')
-		const trashBox2 = this.physics.add.staticSprite(552, 515, 'trashBox2')
+		const trashBox2 = this.physics.add.staticSprite(542, 515, 'trashBox2')
 
 		this.player = new Player(
 			this,
@@ -136,7 +141,9 @@ export class Main extends Phaser.Scene {
 		)
 
 		this.garbages = this.physics.add.group()
+		// ランダムにオブジェクトを生成する
 		for (let i = 0; i < 80; i++) {
+			// どのオブジェクトを作るかを抽選
 			const random = ((): ObjectType => {
 				const int = Phaser.Math.Between(1, 100)
 				// 40%
@@ -183,7 +190,7 @@ export class Main extends Phaser.Scene {
 			canLeaveObjects,
 			undefined,
 			(player) => {
-				if (!this.player.getIsHold() && this.cursors.down.isDown) {
+				if (this.doublePressDownKey) {
 					return false
 				}
 				return (
@@ -202,7 +209,7 @@ export class Main extends Phaser.Scene {
 				}
 				// 上から乗ったときに大ジャンプする
 				this.sound.play('jumpLong')
-				this.player.setVelocityY(-800)
+				this.player.setVelocityY(-700)
 			},
 			(player) => {
 				// 空中からの落下中のみ反応する
@@ -215,7 +222,6 @@ export class Main extends Phaser.Scene {
 
 		this.physics.add.collider(this.garbages, staticObjects)
 		this.physics.add.collider(this.garbages, canLeaveObjects)
-		this.physics.add.collider(this.garbages, this.garbages)
 
 		this.physics.add.overlap(trashBox, this.garbages, (trashBox, garbage) => {
 			this.trash(
@@ -246,6 +252,19 @@ export class Main extends Phaser.Scene {
 		// タイムアップしたら操作不能にする
 		if (this.isGameOver) {
 			return
+		}
+
+		// 下キーの2連入力判定
+		if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+			const elapsedTime = this.time.now - this.lastTimePressDownKey
+			if (elapsedTime < 200) {
+				this.doublePressDownKey = true
+
+				this.time.delayedCall(1000, () => {
+					this.doublePressDownKey = false
+				})
+			}
+			this.lastTimePressDownKey = this.time.now
 		}
 
 		// カウントダウン
@@ -304,13 +323,6 @@ export class Main extends Phaser.Scene {
 		}
 
 		this.sound.play('shoot')
-		this.tweens.add({
-			targets: trashBox,
-			duration: 80,
-			repeat: 0,
-			yoyo: true,
-			scale: 1.2,
-		})
 		garbage.disableBody(true, true)
 
 		// 正しく分別されていたらアイテムごとのポイント、間違えていたら1ptを獲得
