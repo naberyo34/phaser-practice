@@ -75,11 +75,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 	 * キャラクターが画面右側を向いているときに true となる。
 	 */
 	private isFlip = true
+
 	/**
 	 * プレイヤーに近接しているオブジェクト。
 	 * 外部からの set によってのみ更新される。
 	 */
 	private nearObject: CanHoldObject | undefined
+	setNearObject(target: CanHoldObject | undefined) {
+		this.nearObject = target
+	}
+
 	/**
 	 * プレイヤーがつかんでいるオブジェクト。
 	 */
@@ -107,13 +112,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 	private isJumpDown: boolean
 	getIsJumpDown() {
 		return this.isJumpDown
-	}
-
-	/**
-	 * 近接しているオブジェクトを設定する
-	 */
-	setNearObject(target: CanHoldObject | undefined) {
-		this.nearObject = target
 	}
 
 	/**
