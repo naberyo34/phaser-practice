@@ -20,6 +20,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 		this.sound = sound
 		this.cursors = cursors
 		this.keyZ = keyZ
+		this.jumpTimer = 0
+		this.lastTimePressDownKey = 0
+		this.isJumpDown = false
 
 		scene.add.existing(this)
 		scene.physics.world.enable(this)
@@ -86,6 +89,27 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	/**
+	 * ジャンプを開始した瞬間のゲーム内時間。
+	 * 小ジャンプ / 大ジャンプを押し分けるために用いる。
+	 */
+	private jumpTimer: number
+
+	/**
+	 * 最後に下キーを押した時間。
+	 * 下キーを2連入力したかの判定に用いる。
+	 */
+	private lastTimePressDownKey: number
+
+	/**
+	 * このフラグが立っている間、プレイヤーは「降りられる段差」に対して接触判定がなくなる。
+	 * 下キーを2連入力した際に一時的に立つ。
+	 */
+	private isJumpDown: boolean
+	getIsJumpDown() {
+		return this.isJumpDown
+	}
+
+	/**
 	 * 近接しているオブジェクトを設定する
 	 */
 	setNearObject(target: CanHoldObject | undefined) {
@@ -109,7 +133,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 	throw(direction: { x: number; y: number }) {
 		if (this.holdObject) {
 			this.sound.play('throw')
-			this.holdObject.setThrowed(true)
+
+			// その場で手放したとき以外は回転アニメーションを入れる
+			if (Math.abs(direction.x) > 0 || Math.abs(direction.y) > 100) {
+				this.scene.tweens.add({
+					targets: this.holdObject,
+					duration: Phaser.Math.Between(800, 1600),
+					angle: Phaser.Math.Between(360, 1440),
+				})
+			}
+
+			this.holdObject.setIsThrowed(true)
 			this.holdObject.enableBody()
 			this.holdObject.setVelocity(direction.x, direction.y)
 			this.holdObject = undefined
@@ -148,10 +182,34 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 			this.play(stay, true)
 		}
 
+		// 下キーの2連入力判定
+		if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+			const elapsedTime = this.scene.time.now - this.lastTimePressDownKey
+			if (elapsedTime < 200) {
+				this.isJumpDown = true
+
+				this.scene.time.delayedCall(200, () => {
+					this.isJumpDown = false
+				})
+			}
+			this.lastTimePressDownKey = this.scene.time.now
+		}
+
 		// ジャンプ
-		if (this.cursors.space.isDown && this.body!.touching.down) {
-			this.sound.play('jump')
-			this.setVelocityY(-525)
+		if (this.cursors.space.isDown) {
+			// ジャンプ開始
+			if (this.body!.touching.down) {
+				this.sound.play('jump')
+				// 小ジャンプ
+				this.setVelocityY(-100)
+				this.jumpTimer = this.scene.time.now
+			} else {
+				// 長めに入力した場合ジャンプ飛距離を伸ばす
+				const jumpLength = this.scene.time.now - this.jumpTimer
+				if (200 > jumpLength) {
+					this.setVelocityY(-300)
+				}
+			}
 		}
 
 		// つかんでいるオブジェクトを追従させる

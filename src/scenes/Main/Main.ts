@@ -28,9 +28,6 @@ export class Main extends Phaser.Scene {
 	private score: number
 	private objectCount: Record<ObjectType, { label: string; count: number }>
 
-	private lastTimePressDownKey: number
-	private doublePressDownKey: boolean
-
 	init() {
 		this.isGameOver = false
 		this.isGameEnd = false
@@ -42,7 +39,7 @@ export class Main extends Phaser.Scene {
 			callbackScope: this,
 			loop: true,
 		})
-		this.timerCount = 30
+		this.timerCount = 60
 		this.score = 0
 		this.objectCount = {
 			wastepaper: { label: '紙くず', count: 0 },
@@ -50,8 +47,6 @@ export class Main extends Phaser.Scene {
 			bottle: { label: 'ペットボトル', count: 0 },
 			garbageBag: { label: 'ゴミ袋', count: 0 },
 		}
-		this.lastTimePressDownKey = 0
-		this.doublePressDownKey = false
 
 		this.physics.resume()
 	}
@@ -63,7 +58,9 @@ export class Main extends Phaser.Scene {
 		this.load.image('window', 'assets/images/stage/window.png')
 		this.load.image('lamp', 'assets/images/stage/lamp.png')
 		this.load.image('shelf', 'assets/images/stage/shelf.png')
-		this.load.image('shelf2', 'assets/images/stage/shelf2.png')
+		this.load.image('shelf2-1', 'assets/images/stage/shelf2-1.png')
+		this.load.image('shelf2-2', 'assets/images/stage/shelf2-2.png')
+		this.load.image('shelf2-3', 'assets/images/stage/shelf2-3.png')
 		this.load.image('box', 'assets/images/stage/box.png')
 		this.load.image('box2', 'assets/images/stage/box2.png')
 		this.load.image('trashBox', 'assets/images/stage/trashBox.png')
@@ -113,14 +110,25 @@ export class Main extends Phaser.Scene {
 			.setSize(244, 16)
 			.setOffset(0, 126)
 		canLeaveObjects.create(109, 474, 'shelf')
-		canLeaveObjects.create(720, 447, 'shelf2')
+		canLeaveObjects
+			.create(720, 530, 'shelf2-1')
+			.setSize(160, 32)
+			.setOffset(0, 0)
+		canLeaveObjects
+			.create(720, 475, 'shelf2-2')
+			.setSize(160, 32)
+			.setOffset(0, 0)
+		canLeaveObjects
+			.create(720, 392, 'shelf2-3')
+			.setSize(160, 32)
+			.setOffset(0, 0)
 
 		// 常に接触するオブジェクト
 		const staticObjects = this.physics.add.staticGroup()
 		staticObjects.create(400, 572, 'floor')
 		staticObjects.create(78, 381, 'box')
 		staticObjects.create(115, 341, 'box2')
-		staticObjects.create(757, 319, 'tvChan').setSize(86, 64).setOffset(0, 14)
+		staticObjects.create(757, 154, 'tvChan').setSize(86, 64).setOffset(0, 14)
 
 		// その他のオブジェクト
 		const sofa = this.physics.add
@@ -190,7 +198,7 @@ export class Main extends Phaser.Scene {
 			canLeaveObjects,
 			undefined,
 			(player) => {
-				if (this.doublePressDownKey) {
+				if (this.player.getIsJumpDown()) {
 					return false
 				}
 				return (
@@ -222,6 +230,7 @@ export class Main extends Phaser.Scene {
 
 		this.physics.add.collider(this.garbages, staticObjects)
 		this.physics.add.collider(this.garbages, canLeaveObjects)
+		this.physics.add.collider(this.garbages, this.garbages)
 
 		this.physics.add.overlap(trashBox, this.garbages, (trashBox, garbage) => {
 			this.trash(
@@ -252,19 +261,6 @@ export class Main extends Phaser.Scene {
 		// タイムアップしたら操作不能にする
 		if (this.isGameOver) {
 			return
-		}
-
-		// 下キーの2連入力判定
-		if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-			const elapsedTime = this.time.now - this.lastTimePressDownKey
-			if (elapsedTime < 200) {
-				this.doublePressDownKey = true
-
-				this.time.delayedCall(1000, () => {
-					this.doublePressDownKey = false
-				})
-			}
-			this.lastTimePressDownKey = this.time.now
 		}
 
 		// カウントダウン
@@ -299,7 +295,7 @@ export class Main extends Phaser.Scene {
 					this.player.x,
 					this.player.y,
 				) < (isEdge ? 50 : 40)
-			garbage.setNear(isNear)
+			garbage.setIsNear(isNear)
 			if (isNear) {
 				nearObject = garbage
 				return false
@@ -318,7 +314,7 @@ export class Main extends Phaser.Scene {
 		trashBoxCategory: 'burnable' | 'unburnable',
 	) {
 		// プレイヤーによって投げられて overlap したとき以外は無視
-		if (!garbage.getThrowed()) {
+		if (!garbage.getIsThrowed()) {
 			return
 		}
 
@@ -335,7 +331,6 @@ export class Main extends Phaser.Scene {
 		})
 		this.tweens.add({
 			targets: score,
-			ease: 'Sine.easeInOut',
 			duration: 800,
 			repeat: 0,
 			y: scoreY - 40,

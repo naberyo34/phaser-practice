@@ -79,7 +79,7 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 	 * setNear によってのみ更新される。
 	 */
 	private isNear: boolean
-	setNear(isNear: boolean) {
+	setIsNear(isNear: boolean) {
 		this.isNear = isNear
 		if (this.isNear) {
 			this.setTint(0xff0000)
@@ -93,10 +93,10 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 	 * setThrowed によってのみ更新される。
 	 */
 	private isThrowed
-	getThrowed() {
+	getIsThrowed() {
 		return this.isThrowed
 	}
-	setThrowed(isThrowed: boolean) {
+	setIsThrowed(isThrowed: boolean) {
 		this.isThrowed = isThrowed
 	}
 
@@ -111,13 +111,8 @@ export class CanHoldObject extends Phaser.Physics.Arcade.Sprite {
 			this.body!.blocked.down ||
 			this.body!.blocked.left
 
-		// 投げられたオブジェクトが跳ね返るとき、SEを鳴らす
-		if (
-			this.isThrowed &&
-			this.body!.wasTouching.none &&
-			blocked &&
-			!this.boundSound.isPlaying
-		) {
+		// 投げられたオブジェクトが跳ね返るとき、エフェクトとSEを流す
+		if (this.isThrowed && this.body!.wasTouching.none && blocked) {
 			this.boundSound.play()
 		}
 	}
