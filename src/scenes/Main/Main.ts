@@ -96,7 +96,7 @@ export class Main extends Phaser.Scene {
 		this.sound.pauseAll()
 		this.bgm = this.sound.add('bgm')
 		this.bgm.setLoop(true)
-		this.bgm.play()
+		// this.bgm.play()
 
 		// オブジェクト
 		this.add.image(400, 300, 'background')
@@ -150,7 +150,7 @@ export class Main extends Phaser.Scene {
 
 		this.garbages = this.physics.add.group()
 		// ランダムにオブジェクトを生成する
-		for (let i = 0; i < 80; i++) {
+		for (let i = 0; i < 40; i++) {
 			// どのオブジェクトを作るかを抽選
 			const random = ((): ObjectType => {
 				const int = Phaser.Math.Between(1, 100)
@@ -230,7 +230,7 @@ export class Main extends Phaser.Scene {
 
 		this.physics.add.collider(this.garbages, staticObjects)
 		this.physics.add.collider(this.garbages, canLeaveObjects)
-		this.physics.add.collider(this.garbages, this.garbages)
+		// this.physics.add.collider(this.garbages, this.garbages)
 
 		this.physics.add.overlap(trashBox, this.garbages, (trashBox, garbage) => {
 			this.trash(

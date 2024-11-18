@@ -230,16 +230,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 				const direction = (() => {
 					const result = { x: 0, y: 0 }
 					if (this.cursors.left.isDown) {
-						result.x = -400
+						result.x = -600
 					}
 					if (this.cursors.right.isDown) {
-						result.x = 400
+						result.x = 600
 					}
 					if (this.cursors.up.isDown) {
-						result.y = -400
+						result.y = -600
 					}
 					if (this.cursors.down.isDown) {
-						result.y = 400
+						result.y = 600
 					}
 					// 上下入力をしていない場合はちょっと上向きに飛ばす
 					if (result.y === 0) {
